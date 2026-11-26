@@ -1,0 +1,10 @@
+# 编辑器运行时产物
+log.txt
+*.log
+game_*.png
+editor_*.png
+
+# 系统文件
+Thumbs.db
+desktop.ini
+.DS_Store

@@ -1,0 +1,15 @@
+{
+  "projectName": "\u5C31\u9488\u5BF9\u8C01\u7684\u5730\u56FE01",
+  "projectID": "6b07eab4421aa94a01b19da6",
+  "serverPort": 35033,
+  "syncEnabled": true,
+  "excludePatterns": [
+    ".vscode",
+    ".git",
+    "EggyAPI.lua",
+    ".codemaker"
+  ],
+  "version": "1.0.0",
+  "playerNid": "704425640",
+  "mapDir": "D:\\FeverApps\\party_pc\\Documents\\etc\\editor_maps\\YXdmcXRFSWFxVW9Cc1oybQ==__pc"
+}

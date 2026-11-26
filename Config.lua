@@ -15,7 +15,6 @@ Config.PICKUP_RADIUS      = 1.6     -- 拾取物拾取半径（蛋仔身位）
 Config.FINISH_RADIUS      = 3.0     -- 终点冲线半径
 Config.CHECKPOINT_RADIUS  = 3.0     -- 存档点触发半径
 Config.RESPAWN_Y_OFFSET   = 1.5     -- 重生时在存档点上方的抬高量
-Config.FALL_DEBOUNCE_TICKS= 15      -- 掉落去抖：连续低于阈值只计一次（0.5s）
 Config.MAX_PLAYERS        = 8       -- 最大玩家数（座位 1~8）
 
 Config.ENABLE_PUSH_BALL   = false   -- 第二阶段总开关：false 时 PUSH_BALL 直接跳过

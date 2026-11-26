@@ -39,11 +39,10 @@ local function init_ui()
 
     local names = { Config.UI.SCORE_LABEL, Config.UI.RANK_LABEL, Config.UI.TIMER_LABEL }
 
-    local ok, result = pcall(function()
-        return LuaAPI.query_ui_nodes(names)
-    end)
+    -- 统一经 EggyAdapter 调用，保持引擎 API 只有一个出口
+    local result = Adapter.query_ui_nodes(names)
 
-    if not ok then
+    if result == nil then
         ui_ready = false
         print("[ICE] UI 查询失败，UI 刷新跳过（不影响玩法）")
         return

@@ -70,6 +70,8 @@ local function new_player(role, role_id)
         candyCount         = 0,
         starCount          = 0,
         isFalling          = false,  -- 掉落去抖状态（防止低于阈值时每帧重复计数）
+        isOnline           = true,   -- 在线状态：掉线只置不可见，不删档案以免结算丢分
+        spawnPos           = nil,    -- 开局出生点（0 号存档点兜底目标）
 
         -- 第二阶段预留
         pushGoals          = 0,
@@ -95,6 +97,18 @@ function Score.sync_roles(roles)
             else
                 p.role = role        -- 刷新句柄，防对象失效
             end
+        end
+    end
+
+    -- 掉线标记：本轮未出现的玩家保留档案（避免结算丢分与排名塌陷），只置为离线
+    for key, p in pairs(Score.players) do
+        if seen[key] then
+            p.isOnline = true
+        else
+            if p.isOnline then
+                Adapter.log(string.format("玩家离线：%s (roleId=%s)", p.name, p.sortKey))
+            end
+            p.isOnline = false
         end
     end
 
@@ -202,10 +216,17 @@ function Score.mark_finish(p, elapsed_ticks)
 end
 
 --- 是否全员完赛（用于 PARKOUR 提前结束）
+--- 只统计在线玩家；在线人数为 0 时返回 false，
+--- 避免空局或全掉线时首帧就误判「全员完赛」并跳过跑酷阶段
 function Score.all_finished()
+    local online = 0
     for _, p in pairs(Score.players) do
-        if not p.isFinishedParkour then return false end
+        if p.isOnline then
+            online = online + 1
+            if not p.isFinishedParkour then return false end
+        end
     end
+    if online == 0 then return false end
     return true
 end
 
@@ -287,10 +308,12 @@ function Score.compute_titles()
         end
     end
 
-    -- ⑤ 冰面平衡大师：零掉落（多人另要求完赛人数 ≥ 2）
+    -- ⑤ 冰面平衡大师：完赛且零掉落（防止全程挂机不完赛的玩家白拿称号）
     local balanced = {}
     for _, p in ipairs(list) do
-        if p.fallCount == 0 then balanced[#balanced + 1] = p end
+        if p.isFinishedParkour and p.fallCount == 0 then
+            balanced[#balanced + 1] = p
+        end
     end
     if single then
         if #balanced >= 1 then

@@ -61,6 +61,8 @@ local function teleport_all()
         local unit = Adapter.ctrl_unit(p.role)
         if tp and tp.pos and unit then
             if Adapter.set_pos(unit, tp.pos) then
+                -- 清零惯性：传送后残留速度会把玩家带离落点
+                Adapter.set_linear_velocity(unit, Adapter.vec(0, 0, 0))
                 moved = moved + 1
             else
                 failed = failed + 1
@@ -98,11 +100,14 @@ local function enter(new_state)
 
     elseif new_state == Config.PHASE.TRANSITION then
         teleport_all()
+        -- 转场期间锁操作：防止 5 秒倒计时里乱跑或提前掉台
+        lock_all(true)
         print_board("跑酷阶段积分榜")
         announce("TRANSITION", "转场：准备进入水晶圆台")
 
     elseif new_state == Config.PHASE.PUSH_BALL then
         -- 第二阶段占位：这里是推球逻辑的生命周期入口
+        lock_all(false)      -- 转场锁定在此解除，正式开赛
         announce("PUSH_BALL", "推球抢分！")
         print("[ICE] PUSH_BALL 已进入（本阶段实现预留，逻辑开关见 Config.ENABLE_PUSH_BALL）")
 

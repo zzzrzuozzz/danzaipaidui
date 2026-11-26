@@ -51,14 +51,19 @@ end
 ---@param key string 埋点 key
 ---@param value number 增量
 function Adapter.track(role, key, value)
-    if role then
+    if role == nil then return end
+    local v = value or 1
+
+    -- 统一经 mcall 调用，避免与其他实例方法的调用约定不一致
+    if role["send_track_data_log"] ~= nil then
         local ok = pcall(function()
-            role.send_track_data_log(key, value or 1)
+            Adapter.mcall(role, "send_track_data_log", key, v)
         end)
-        if not ok then
-            pcall(function() role.send_track_data_change(key, value or 1) end)
-        end
+        if ok then return end
     end
+    pcall(function()
+        Adapter.mcall(role, "send_track_data_change", key, v)
+    end)
 end
 
 -- ==================== 实例方法调用（兼容点式/冒号式） ====================
@@ -166,6 +171,14 @@ end
 function Adapter.apply_force(unit, force)
     if unit == nil or force == nil then return false end
     local ok = pcall(function() Adapter.mcall(unit, "apply_force", force) end)
+    return ok
+end
+
+--- 设置线速度（掉落重生 / 转场传送后清零惯性）
+--- 对应引擎 API：Unit.set_linear_velocity(_vel)
+function Adapter.set_linear_velocity(unit, vel)
+    if unit == nil or vel == nil then return false end
+    local ok = pcall(function() Adapter.mcall(unit, "set_linear_velocity", vel) end)
     return ok
 end
 

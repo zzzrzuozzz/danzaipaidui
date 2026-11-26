@@ -56,15 +56,15 @@ end
 -- ==================== 存档点 ====================
 
 --- 推进玩家存档点（只前进不后退）
+--- 从后往前扫描：即使漏踩前面的存档点，踩到后面的也能正常推进
 local function update_checkpoint(p, pos)
     local count = Registry.checkpoint_count()
-    for i = p.checkpointIndex + 1, count do
+    for i = count, p.checkpointIndex + 1, -1 do
         local cp = Registry.get_checkpoint(i)
         if cp and cp.pos then
             if Adapter.dist(pos, cp.pos) < Config.CHECKPOINT_RADIUS + EPS then
                 p.checkpointIndex = i
-            else
-                break        -- 存档点是有序的，遇到未触碰的即可停止
+                break
             end
         end
     end
@@ -73,18 +73,41 @@ end
 -- ==================== 掉落重生 ====================
 
 --- 掉落回点：不扣分，只记 fallCount（v1.1 规则）
+--- 回退顺序：已激活存档点 → 开局出生点 → 1 号存档点（最后兜底）
 local function respawn(p, unit)
-    local cp = Registry.get_checkpoint(p.checkpointIndex)
-    if cp == nil then cp = Registry.get_checkpoint(1) end
+    local target = nil
+    local back_to = 0
 
-    if cp and cp.pos then
-        local target = Adapter.offset(cp.pos, 0, Config.RESPAWN_Y_OFFSET, 0)
+    if p.checkpointIndex > 0 then
+        local cp = Registry.get_checkpoint(p.checkpointIndex)
+        if cp and cp.pos then
+            target = Adapter.offset(cp.pos, 0, Config.RESPAWN_Y_OFFSET, 0)
+            back_to = p.checkpointIndex
+        end
+    end
+
+    -- 0 号兜底：回到开局出生点，避免开局跳崖直接传到 1 号存档点逃课
+    if target == nil and p.spawnPos ~= nil then
+        target = Adapter.offset(p.spawnPos, 0, Config.RESPAWN_Y_OFFSET, 0)
+    end
+
+    if target == nil then
+        local cp = Registry.get_checkpoint(1)
+        if cp and cp.pos then
+            target = Adapter.offset(cp.pos, 0, Config.RESPAWN_Y_OFFSET, 0)
+            back_to = 1
+        end
+    end
+
+    if target then
         Adapter.set_pos(unit, target)
     end
+    -- 清零惯性：消除高空下坠残留速度，否则重生瞬间会被残余速度带走
+    Adapter.set_linear_velocity(unit, Adapter.vec(0, 0, 0))
 
     p.fallCount = p.fallCount + 1
     Adapter.log(string.format("掉落重生：%s（累计 %d 次，回到存档点 %d）",
-        p.name, p.fallCount, p.checkpointIndex > 0 and p.checkpointIndex or 1))
+        p.name, p.fallCount, back_to))
     Adapter.track(p.role, Config.TRACK.FALL, 1)
 end
 
@@ -102,7 +125,12 @@ function Parkour.update(elapsed_ticks)
         local unit = Adapter.ctrl_unit(p.role)
         unitmap[p.sortKey] = unit
         if unit then
-            posmap[p.sortKey] = Adapter.get_pos(unit)
+            local pos = Adapter.get_pos(unit)
+            posmap[p.sortKey] = pos
+            -- 记录开局出生点：作为 0 号存档点的兜底目标
+            if pos ~= nil and p.spawnPos == nil then
+                p.spawnPos = pos
+            end
         end
     end
 

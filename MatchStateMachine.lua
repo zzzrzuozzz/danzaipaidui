@@ -15,6 +15,7 @@ local Adapter    = require("EggyAdapter")
 local Score      = require("ScoreManager")
 local Registry   = require("SceneRegistry")
 local Parkour    = require("ParkourLogic")
+local PushBall   = require("PushBallLogic")
 
 local Match = {}
 
@@ -106,12 +107,12 @@ local function enter(new_state)
         announce("TRANSITION", "转场：准备进入水晶圆台")
 
     elseif new_state == Config.PHASE.PUSH_BALL then
-        -- 第二阶段占位：这里是推球逻辑的生命周期入口
         lock_all(false)      -- 转场锁定在此解除，正式开赛
+        PushBall.start()     -- 第二阶段生命周期入口
         announce("PUSH_BALL", "推球抢分！")
-        print("[ICE] PUSH_BALL 已进入（本阶段实现预留，逻辑开关见 Config.ENABLE_PUSH_BALL）")
 
     elseif new_state == Config.PHASE.SETTLEMENT then
+        PushBall.stop()      -- 冻结场上球体，避免结算期间误进球
         lock_all(true)
         print_board("最终结算")
         Match.award_titles()
@@ -192,7 +193,7 @@ function Match.update()
         end
 
     elseif state == Config.PHASE.PUSH_BALL then
-        -- 第二阶段逻辑挂载点（预留）
+        PushBall.update(phase_tick)
         if phase_tick >= limit then
             enter(Config.PHASE.SETTLEMENT)
         end

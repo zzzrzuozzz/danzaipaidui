@@ -171,6 +171,31 @@ function Score.add_pickup(p, kind)
     end
 end
 
+--- 推球进球加分（第二阶段）
+--- 集中处理：pushScore / totalScore / pushGoals、引擎积分板同步、埋点、抢断加成
+---@param p table 玩家档案
+---@param base_score integer 进球基础分
+---@param is_stolen boolean 是否抢断进球
+function Score.add_push_goal(p, base_score, is_stolen)
+    if p == nil then return end
+
+    local gain = base_score or 0
+    p.pushScore = p.pushScore + gain
+    p.pushGoals = p.pushGoals + 1
+    Score.add(p, gain, "push_goal")
+    Adapter.track(p.role, Config.TRACK.GOAL, gain)
+
+    -- 抢断额外加分：仅多人模式判定（单人无人可抢）
+    if is_stolen and not Score.is_single() then
+        local bonus = Config.PUSH_BALL.STEAL_BONUS
+        p.stealCount = p.stealCount + 1
+        p.pushScore  = p.pushScore + bonus
+        Score.add(p, bonus, "steal_bonus")
+        Adapter.track(p.role, Config.TRACK.STEAL, 1)
+        Adapter.tips(p.role, string.format("抢断 +%d！", bonus), 2.0)
+    end
+end
+
 -- ==================== 拾取防重 ====================
 
 --- 尝试占用一个拾取物；成功返回 true

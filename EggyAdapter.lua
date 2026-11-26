@@ -182,6 +182,22 @@ function Adapter.set_linear_velocity(unit, vel)
     return ok
 end
 
+--- 设置角速度（球体回收时清零旋转）
+--- 对应引擎 API：Unit.set_angular_velocity(_vel)
+function Adapter.set_angular_velocity(unit, vel)
+    if unit == nil or vel == nil then return false end
+    local ok = pcall(function() Adapter.mcall(unit, "set_angular_velocity", vel) end)
+    return ok
+end
+
+--- 开关物理（停放隐藏时关闭，激活时开启）
+--- 对应引擎 API：Unit.set_physics_active(_is_active)
+function Adapter.set_physics_active(unit, active)
+    if unit == nil then return false end
+    local ok = pcall(function() Adapter.mcall(unit, "set_physics_active", active) end)
+    return ok
+end
+
 --- 销毁单位
 function Adapter.destroy_unit(unit)
     if unit == nil then return false end

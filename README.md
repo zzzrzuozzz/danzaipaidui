@@ -1,6 +1,6 @@
 # 樱花冰晶：甜心推推冲分赛（Eggy Party · 原点编辑器 / FS 帧同步）
 
-4–8 人 FFA 抢分玩法的 Lua 实现。第一阶段已完成 **READY → PARKOUR → TRANSITION → PUSH_BALL(预留) → SETTLEMENT** 的完整确定性闭环。
+4–8 人 FFA 抢分玩法的 Lua 实现。两个阶段均已完成：**READY → PARKOUR → TRANSITION → PUSH_BALL → SETTLEMENT** 的完整确定性闭环。
 
 ## 模块结构
 
@@ -12,10 +12,11 @@ SceneRegistry.lua     场景契约解析：按名解析 50+ 组件，缺失只�
 ScoreManager.lua      玩家状态 · 计分 · 防重拾 · 名次分 · 确定性排序 · 称号
 MatchStateMachine.lua 5 阶段状态机 · 全员完赛提前结束 · 按座位传送 · 结算
 ParkourLogic.lua      拾取判定 · 存档点推进 · 掉落去抖重生 · 终点冲线
+PushBallLogic.lua     推球 · 触球归属 · 抢断判定 · 进球计分 · 球体回收刷新
 ```
 
-依赖单向：`ParkourLogic` 不反向依赖状态机。接入推球阶段只需在
-`MatchStateMachine` 的 `PUSH_BALL` 分支挂新模块，不必改动上述文件。
+依赖单向：`ParkourLogic` / `PushBallLogic` 都不反向依赖状态机，由
+`MatchStateMachine` 单向调用其 `start / update / stop` 生命周期。
 
 ## 关键设计
 
@@ -78,6 +79,10 @@ $cli = "$env:USERPROFILE\.eggitor\cli\editor-cli.exe"
 | `冰晶星_01` ~ `冰晶星_10` | 10 |
 | `传送点_01` ~ `传送点_08` | 8 |
 | `终点_胜利区域` | 1 |
+| `糖果球_01` ~ `糖果球_04` | 4（+15 分） |
+| `冰晶大球_01` ~ `冰晶大球_02` | 2（+35 分，第 450/900 帧激活） |
+| `球洞_01` ~ `球洞_04` | 4 |
+| `球刷新点_01` ~ `球刷新点_04` | 4 |
 
 缺失只打印告警，不会崩溃 —— 当前仓库中的地图尚未搭建这些组件。
 
@@ -85,7 +90,7 @@ $cli = "$env:USERPROFILE\.eggitor\cli\editor-cli.exe"
 
 - UI 刷新默认关闭：节点不存在时 `set_label_text` 会让引擎持续报「节点类型不正确」，
   `pcall` 无法拦截这类引擎侧参数校验日志。
-- 推球阶段为生命周期占位，逻辑待第二阶段实现。
+- 推球阶段已实现，但**尚未在真实球 / 球洞场景下验证计分正确性**（当前地图未摆放这些组件）。
 - 拾取 / 冲线 / 存档点链路已在空场景下验证不崩溃，但尚未用真实组件验证计分正确性。
 
 ## `EggyAPI.lua` 说明

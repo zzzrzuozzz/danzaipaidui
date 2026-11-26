@@ -23,6 +23,12 @@ Registry.stars       = {}
 Registry.teleports   = {}
 Registry.finish      = nil
 
+-- 第二阶段对象池（预摆复用，不做运行时动态创建）
+Registry.candyBalls  = {}
+Registry.bigBalls    = {}
+Registry.ballHoles   = {}
+Registry.ballSpawns  = {}
+
 -- 解析统计（用于启动日志）
 Registry.stats = {}
 
@@ -66,6 +72,10 @@ function Registry.build()
     Registry.stars       = {}
     Registry.teleports   = {}
     Registry.finish      = nil
+    Registry.candyBalls  = {}
+    Registry.bigBalls    = {}
+    Registry.ballHoles   = {}
+    Registry.ballSpawns  = {}
     Registry.stats       = {}
 
     Adapter.clear_unit_cache()
@@ -74,6 +84,12 @@ function Registry.build()
     Registry.candies     = resolve_group(Config.SCENE.CANDY,      "樱花糖果")
     Registry.stars       = resolve_group(Config.SCENE.STAR,       "冰晶星")
     Registry.teleports   = resolve_group(Config.SCENE.TELEPORT,   "传送点")
+
+    -- 第二阶段对象池
+    Registry.candyBalls  = resolve_group(Config.SCENE.CANDY_BALL, "糖果球")
+    Registry.bigBalls    = resolve_group(Config.SCENE.BIG_BALL,   "冰晶大球")
+    Registry.ballHoles   = resolve_group(Config.SCENE.BALL_HOLE,  "球洞")
+    Registry.ballSpawns  = resolve_group(Config.SCENE.BALL_SPAWN, "球刷新点")
 
     -- 终点（单件）
     local finish_unit = Adapter.find_unit(Config.SCENE_FINISH)
@@ -93,6 +109,10 @@ function Registry.build()
         star       = #Registry.stars,
         teleport   = #Registry.teleports,
         finish     = Registry.finish and 1 or 0,
+        candyBall  = #Registry.candyBalls,
+        bigBall    = #Registry.bigBalls,
+        ballHole   = #Registry.ballHoles,
+        ballSpawn  = #Registry.ballSpawns,
     }
 
     print(string.format(
@@ -102,6 +122,14 @@ function Registry.build()
         Registry.stats.star,       Config.SCENE.STAR.count,
         Registry.stats.teleport,   Config.SCENE.TELEPORT.count,
         Registry.stats.finish
+    ))
+
+    print(string.format(
+        "[ICE] 推球对象池：糖果球 %d/%d，冰晶大球 %d/%d，球洞 %d/%d，刷新点 %d/%d",
+        Registry.stats.candyBall,  Config.SCENE.CANDY_BALL.count,
+        Registry.stats.bigBall,    Config.SCENE.BIG_BALL.count,
+        Registry.stats.ballHole,   Config.SCENE.BALL_HOLE.count,
+        Registry.stats.ballSpawn,  Config.SCENE.BALL_SPAWN.count
     ))
 
     return Registry.stats
@@ -140,5 +168,17 @@ end
 function Registry.checkpoint_count()
     return #Registry.checkpoints
 end
+
+-- ==================== 第二阶段对象池取件 ====================
+
+function Registry.get_candy_ball(index) return Registry.candyBalls[index] end
+function Registry.get_big_ball(index)   return Registry.bigBalls[index]   end
+function Registry.get_ball_hole(index)  return Registry.ballHoles[index]  end
+function Registry.get_ball_spawn(index) return Registry.ballSpawns[index] end
+
+function Registry.candy_ball_count() return #Registry.candyBalls end
+function Registry.big_ball_count()   return #Registry.bigBalls   end
+function Registry.ball_hole_count()  return #Registry.ballHoles  end
+function Registry.ball_spawn_count() return #Registry.ballSpawns end
 
 return Registry

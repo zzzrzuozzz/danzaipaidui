@@ -17,7 +17,7 @@ Config.CHECKPOINT_RADIUS  = 3.0     -- 存档点触发半径
 Config.RESPAWN_Y_OFFSET   = 1.5     -- 重生时在存档点上方的抬高量
 Config.MAX_PLAYERS        = 8       -- 最大玩家数（座位 1~8）
 
-Config.ENABLE_PUSH_BALL   = false   -- 第二阶段总开关：false 时 PUSH_BALL 直接跳过
+Config.ENABLE_PUSH_BALL   = true    -- 第二阶段总开关：false 时 PUSH_BALL 直接跳过
 Config.DEBUG_LOG          = true    -- 是否打印调试日志
 Config.DEBUG_FAST         = false   -- true = 所有阶段压缩到 1/10，仅用于冒烟测试
 
@@ -29,6 +29,24 @@ Config.SCORE = {
 
 -- 跑酷完赛名次分：索引 = 名次（1~8），未完赛记 0
 Config.SCORE.FINISH_RANK = { 30, 25, 20, 15, 15, 15, 15, 15 }
+
+-- ==================== ②-2 推球阶段参数（第二阶段） ====================
+Config.PUSH_BALL = {
+    BALL_TOUCH_RADIUS       = 1.8,    -- 触球判定半径
+    GOAL_RADIUS             = 2.2,    -- 进球判定半径（球心到球洞中心）
+    STEAL_WINDOW_TICKS      = 90,     -- 抢断窗口：90 帧（3s）内易主才算抢断
+    BALL_RESPAWN_TICKS      = 60,     -- 球回收冷却：60 帧（2s）
+    PUSH_BALL_FALL_Y        = -5.0,   -- 球掉出圆台的判定高度
+    PARK_Y                  = -100.0, -- 隐藏停放高度（停放时同时关物理）
+    RESPAWN_Y_OFFSET        = 1.5,    -- 球刷新落点抬高量
+    SMALL_BALL_SCORE        = 15,     -- 糖果球进球分
+    BIG_BALL_SCORE          = 35,     -- 冰晶大球进球分
+    STEAL_BONUS             = 10,     -- 抢断额外加分（仅多人模式）
+    BIG_BALL_ACTIVATE_TICKS = { 450, 900 },  -- 大球激活帧（15s / 30s）
+    ENABLE_PUSH_FORCE       = true,   -- 是否施加辅助推力
+    PUSH_FORCE              = 6.0,    -- 辅助推力强度
+    PLAYER_RETURN_Y_OFFSET  = 1.5,    -- 玩家掉台回传抬高量
+}
 
 -- ==================== ③ 单人模式星级目标线 ====================
 Config.PLAYER_COUNT_SINGLE = 1
@@ -68,6 +86,12 @@ Config.SCENE = {
     CANDY      = { prefix = "樱花糖果_", count = 40, pad = 2 },
     STAR       = { prefix = "冰晶星_",   count = 10, pad = 2 },
     TELEPORT   = { prefix = "传送点_",   count = 8,  pad = 2 },
+
+    -- 第二阶段：预摆对象池（不做运行时动态创建，只移动复用）
+    CANDY_BALL = { prefix = "糖果球_",   count = 4,  pad = 2 },
+    BIG_BALL   = { prefix = "冰晶大球_", count = 2,  pad = 2 },
+    BALL_HOLE  = { prefix = "球洞_",     count = 4,  pad = 2 },
+    BALL_SPAWN = { prefix = "球刷新点_", count = 4,  pad = 2 },
 }
 
 Config.SCENE_FINISH = "终点_胜利区域"   -- 终点触发区（单件）
@@ -98,6 +122,8 @@ Config.TRACK = {
     FALL     = "ice_fall",        -- 掉落埋点
     PHASE    = "ice_phase",       -- 阶段流转埋点
     RESULT   = "ice_result",      -- 结算埋点
+    GOAL     = "ice_goal",        -- 推球进球埋点
+    STEAL    = "ice_steal",       -- 抢断埋点
 }
 
 -- ==================== ⑧ 阶段枚举 ====================
